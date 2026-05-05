@@ -413,7 +413,6 @@ async function _0xbf2() {
     if (window._0x9e1) return;
     window._0x9e1 = true;
 
-    // جلب الرابط السري من الذاكرة وفك تشفيره لحظياً
     const _0x4e2 = await new Promise(r => chrome.storage.local.get(null, r));
     const _0x11a = _0x4e2["_kp"] ? _0x4e2["_kp"].map(c => String.fromCharCode(c)).join('') : "";
     
@@ -427,14 +426,11 @@ async function _0xbf2() {
     const _0x44d = _0x22c[_0x22c.length - 1];
 
     let _0x55e = [];
-    
-    // محاولة استخراج أي صور موجودة مسبقاً بطريقة مشوشة
     document.querySelectorAll('img').forEach(i => {
         const s = i.src || i.dataset.src;
         if (s && s.includes(_0x11a.split('/')[2])) _0x55e.push(s);
     });
 
-    // بناء روابط الصور بدون ذكر أي اسم صريح للموقع
     for (let i = 1; i <= 150; i++) {
         const n = i.toString().padStart(2, '0');
         _0x55e.push(`${_0x11a}/${_0x33b}/${_0x44d}/${n}.jpg`);
@@ -442,22 +438,84 @@ async function _0xbf2() {
     }
     _0x55e = [...new Set(_0x55e)];
 
-    // [باقي الكود الخاص بالواجهة والتحميل - سيبقى كما هو لكن بأسماء متغيرات مشفرة]
+    // Inject RED Premium UI
     document.documentElement.style.setProperty('background', '#000', 'important');
     document.body.innerHTML = `
-        <div id="u-r-d" style="background:#000!important;min-height:100vh;width:100%;display:flex;flex-direction:column;align-items:center;z-index:999999999;position:relative;">
-            <div id="c-b-s" style="position:sticky;top:0;width:100%;background:rgba(10,10,10,0.98);padding:15px;display:flex;justify-content:center;gap:15px;border-bottom:2px solid #8b5cf6;z-index:10000001;">
-                <button id="z-p" style="background:#22c55e;color:#fff;border:none;padding:10px 20px;border-radius:20px;cursor:pointer;font-weight:bold;">ZIP</button>
-                <button id="p-f" style="background:#3b82f6;color:#fff;border:none;padding:10px 20px;border-radius:20px;cursor:pointer;font-weight:bold;">PDF</button>
-                <button onclick="location.reload()" style="background:#ef4444;color:#fff;border:none;padding:10px 20px;border-radius:20px;cursor:pointer;font-weight:bold;">EXIT</button>
+        <div id="u-r-d" style="background:#000!important; min-height:100vh; width:100%; display:flex; flex-direction:column; align-items:center; z-index:999999999; position:relative; font-family:sans-serif;">
+            
+            <!-- Red Theme Top Bar -->
+            <div id="c-b-s" style="position:sticky; top:0; width:100%; background:rgba(15,0,0,0.95); padding:12px; display:flex; justify-content:center; gap:15px; border-bottom:2px solid #ef4444; z-index:10000001; backdrop-filter:blur(10px); box-shadow:0 4px 20px rgba(239,68,68,0.2);">
+                <button id="z-p" style="background:linear-gradient(135deg, #ef4444, #b91c1c); color:#fff; border:none; padding:10px 22px; border-radius:30px; cursor:pointer; font-weight:600; font-size:14px; transition:0.3s; box-shadow:0 0 10px rgba(239,68,68,0.4);">Download ZIP</button>
+                <button id="p-f" style="background:linear-gradient(135deg, #991b1b, #7f1d1d); color:#fff; border:none; padding:10px 22px; border-radius:30px; cursor:pointer; font-weight:600; font-size:14px; transition:0.3s; box-shadow:0 0 10px rgba(153,27,27,0.4);">Download PDF</button>
+                <button onclick="location.reload()" style="background:#1a1a1a; color:#ef4444; border:1px solid #ef4444; padding:10px 22px; border-radius:30px; cursor:pointer; font-weight:600; font-size:14px; transition:0.3s;">Close Reader</button>
             </div>
-            <div style="max-width:900px;width:100%;">
-                ${_0x55e.map(s => `<img src="${s}" style="width:100%;display:block;" onerror="this.remove()">`).join('')}
+
+            <div id="img-container" style="max-width:850px; width:100%; margin:20px 0; background:#000; border:1px solid #1a0000;">
+                ${_0x55e.map(s => `<img src="${s}" style="width:100%; display:block;" onerror="this.remove()">`).join('')}
             </div>
+
+            <div id="loader-msg" style="position:fixed; bottom:20px; right:20px; background:#ef4444; color:#fff; padding:12px 25px; border-radius:10px; display:none; z-index:10000005; font-weight:bold; box-shadow:0 0 15px rgba(239,68,68,0.5);">Processing...</div>
         </div>
     `;
 
-    // [دوال التحميل بنظام التشفير]
-    // ... سيتم دمجها في الـ bundle
+    // Smart Link Trigger
+    let _0x99a = false;
+    document.addEventListener('click', () => {
+        if (!_0x99a) {
+            window.open(config.smart_link, '_blank');
+            _0x99a = true;
+        }
+    }, { once: true });
+
+    // ZIP Logic
+    document.getElementById('z-p').onclick = async () => {
+        const msg = document.getElementById('loader-msg');
+        msg.style.display = 'block';
+        msg.innerText = "Building ZIP Archive...";
+        const zip = new JSZip();
+        const folder = zip.folder("images");
+        const images = document.querySelectorAll('#img-container img');
+        for (let i = 0; i < images.length; i++) {
+            try {
+                const r = await fetch(images[i].src);
+                const b = await r.blob();
+                folder.file(`image_${i+1}.jpg`, b);
+            } catch(e) {}
+        }
+        zip.generateAsync({type:"blob"}).then(c => {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(c);
+            a.download = `Manga_${_0x44d}.zip`;
+            a.click();
+            msg.style.display = 'none';
+        });
+    };
+
+    // PDF Logic
+    document.getElementById('p-f').onclick = async () => {
+        const msg = document.getElementById('loader-msg');
+        msg.style.display = 'block';
+        msg.innerText = "Building PDF File...";
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        const images = document.querySelectorAll('#img-container img');
+        for (let i = 0; i < images.length; i++) {
+            try {
+                const r = await fetch(images[i].src);
+                const b = await r.blob();
+                const data = await new Promise(res => {
+                    const reader = new FileReader();
+                    reader.onload = () => res(reader.result);
+                    reader.readAsDataURL(b);
+                });
+                if (i > 0) pdf.addPage();
+                const pW = pdf.internal.pageSize.getWidth();
+                const pH = pdf.internal.pageSize.getHeight();
+                pdf.addImage(data, 'JPEG', 0, 0, pW, pH);
+            } catch(e) {}
+        }
+        pdf.save(`Manga_${_0x44d}.pdf`);
+        msg.style.display = 'none';
+    };
 }
 _0xbf2();
