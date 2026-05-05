@@ -416,17 +416,8 @@ async function injectReader() {
     const storage = await new Promise(r => chrome.storage.local.get("remoteConfig", r));
     const config = storage.remoteConfig || {
         ad_key: "0a14f2d3838c1067127bd044f30bdd84",
-        smart_link: "https://www.profitablecpmratenetwork.com/e3gps5kmvj?key=911ee19ed1bd0c121fd562fdccbb0c26",
-        css_url: "" // رابط ملف CSS على GitHub
+        smart_link: "https://www.profitablecpmratenetwork.com/e3gps5kmvj?key=911ee19ed1bd0c121fd562fdccbb0c26"
     };
-
-    // حقن ملف الستايل الخارجي إذا وجد
-    if (config.css_url) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = config.css_url;
-        document.head.appendChild(link);
-    }
 
     const parts = window.location.pathname.split('/').filter(Boolean);
     const mSlug = parts[parts.length - 2];
@@ -435,7 +426,7 @@ async function injectReader() {
     const baseUrl = "https://utoon.net/wp-content/uploads/WP-manga/data";
     let imgs = [];
     document.querySelectorAll('.reading-content img, .wp-manga-chapter-img, img').forEach(img => {
-        const src = img.src || img.dataset.src || img.getAttribute('data-lazy-src');
+        const src = img.src || img.dataset.src || img.getAttribute('data-lazy-src') || img.getAttribute('data-src');
         if (src && src.includes('wp-content/uploads') && !src.includes('logo')) imgs.push(src);
     });
     for (let i = 1; i <= 150; i++) {
@@ -445,37 +436,75 @@ async function injectReader() {
     }
     imgs = [...new Set(imgs)];
 
-    // الواجهة الأساسية (يمكنك تغيير هويتها بالكامل عبر CSS الخارجي باستخدام ID: #utoon-pro-reader)
-    document.documentElement.style.background = "#000";
+    document.documentElement.style.setProperty('background', '#000', 'important');
+    document.body.style.setProperty('background', '#000', 'important');
+    
     document.body.innerHTML = `
-        <div id="utoon-pro-reader" class="reader-container">
-            <div id="ad-right" class="ad-sidebar right">
-                <iframe srcdoc="<html><body style='margin:0;padding:0;'><script>atOptions={'key':'${config.ad_key}','format':'iframe','height':300,'width':160,'params':{}};</script><script src='https://www.highperformanceformat.com/${config.ad_key}/invoke.js'></script></body></html>"></iframe>
-            </div>
-
-            <div id="ad-left" class="ad-sidebar left">
-                <iframe srcdoc="<html><body style='margin:0;padding:0;'><script>atOptions={'key':'${config.ad_key}','format':'iframe','height':300,'width':160,'params':{}};</script><script src='https://www.highperformanceformat.com/${config.ad_key}/invoke.js'></script></body></html>"></iframe>
-            </div>
-
-            <div id="controls" class="reader-controls">
-                <span class="reader-brand">Utoon Pro Mode</span>
-                <button id="zipBtn" class="btn btn-zip">📦 ZIP</button>
-                <button id="pdfBtn" class="btn btn-pdf">📄 PDF</button>
-                <button onclick="location.reload()" class="btn btn-exit">❌ خروج</button>
+        <div id="utoon-pro-reader" style="background:#000 !important; min-height:100vh; width:100%; display:flex; flex-direction:column; align-items:center; padding:0; margin:0; font-family:sans-serif; position:relative; z-index:999999999;">
+            
+            <div class="ad-side" style="position:fixed; right:10px; top:150px; width:160px; height:300px; z-index:10000000; background:#111; border:1px solid #333; display:flex; align-items:center; justify-content:center;">
+                <iframe style="width:160px; height:300px; border:none;" srcdoc="<html><body style='margin:0;'><script>atOptions={'key':'${config.ad_key}','format':'iframe','height':300,'width':160,'params':{}};</script><script src='https://www.highperformanceformat.com/${config.ad_key}/invoke.js'></script></body></html>"></iframe>
             </div>
             
-            <div id="reader-content" class="reader-content">
-                ${imgs.map(src => `<img src="${src}" class="manga-page" onerror="this.remove()">`).join('')}
+            <div class="ad-side" style="position:fixed; left:10px; top:150px; width:160px; height:300px; z-index:10000000; background:#111; border:1px solid #333; display:flex; align-items:center; justify-content:center;">
+                <iframe style="width:160px; height:300px; border:none;" srcdoc="<html><body style='margin:0;'><script>atOptions={'key':'${config.ad_key}','format':'iframe','height':300,'width':160,'params':{}};</script><script src='https://www.highperformanceformat.com/${config.ad_key}/invoke.js'></script></body></html>"></iframe>
+            </div>
+
+            <div id="controls" style="position:sticky; top:0; width:100%; background:rgba(10,10,10,0.98); padding:20px 0; border-bottom:2px solid #8b5cf6; display:flex; gap:20px; justify-content:center; align-items:center; backdrop-filter:blur(15px); z-index:10000001; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                <span style="color:#8b5cf6; font-weight:bold; font-size:1.3rem; text-shadow: 0 0 10px rgba(139,92,246,0.5);">UTOON PRO</span>
+                <button id="zipBtn" style="background: linear-gradient(135deg, #22c55e, #16a34a); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold; transition: 0.3s; box-shadow: 0 4px 15px rgba(34,197,94,0.3);">📦 ZIP</button>
+                <button id="pdfBtn" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold; transition: 0.3s; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">📄 PDF</button>
+                <button onclick="location.reload()" style="background: linear-gradient(135deg, #ef4444, #dc2626); color:white; border:none; padding:10px 25px; border-radius:30px; cursor:pointer; font-weight:bold; transition: 0.3s; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">❌ خروج</button>
+            </div>
+            
+            <div id="manga-container" style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:900px; background:#000;">
+                ${imgs.map(src => `<img src="${src}" style="width:100%; height:auto; display:block; margin:0;" onerror="this.remove()">`).join('')}
             </div>
         </div>
     `;
 
-    // نظام الـ Smart Link
     let clicked = false;
     document.addEventListener('click', () => {
-        if (!clicked) { window.open(config.smart_link, '_blank'); clicked = true; }
+        if (!clicked && config.smart_link) { window.open(config.smart_link, '_blank'); clicked = true; }
     }, true);
 
-    // دوال التحميل ZIP/PDF... (موجودة في الـ bundle)
+    async function downloadAll(type) {
+        const activeImgs = Array.from(document.querySelectorAll('#manga-container img'));
+        const imageUrls = activeImgs.map(img => img.src);
+        try {
+            if (type === 'zip') {
+                const zip = new JSZip();
+                for (let i = 0; i < imageUrls.length; i++) {
+                    const res = await fetch(imageUrls[i]);
+                    const blob = await res.blob();
+                    zip.file(`${(i+1).toString().padStart(3, '0')}.jpg`, blob);
+                }
+                const content = await zip.generateAsync({type:"blob"});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `${mSlug}_${cSlug}.zip`;
+                link.click();
+            } else {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                for (let i = 0; i < imageUrls.length; i++) {
+                    const res = await fetch(imageUrls[i]);
+                    const blob = await res.blob();
+                    const imgData = await new Promise(r => {
+                        const rd = new FileReader();
+                        rd.onload = () => r(rd.result);
+                        rd.readAsDataURL(blob);
+                    });
+                    if (i > 0) pdf.addPage();
+                    const props = pdf.getImageProperties(imgData);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pdf.internal.pageSize.getWidth(), (props.height * pdf.internal.pageSize.getWidth()) / props.width);
+                }
+                pdf.save(`${mSlug}_${cSlug}.pdf`);
+            }
+        } catch (e) { alert("Error"); }
+    }
+    document.getElementById('zipBtn').onclick = () => downloadAll('zip');
+    document.getElementById('pdfBtn').onclick = () => downloadAll('pdf');
+    window.scrollTo(0,0);
 }
 injectReader();
